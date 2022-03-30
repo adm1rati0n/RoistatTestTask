@@ -26,37 +26,57 @@
     $result = [];
     preg_match($logPattern, $line, $result);
 
-    $views ++;
-    $traffic += $result[11];
+    $log = [
+      'ip' => $result[1],
+      'identity' => $result[2],
+      'user' => $result[3],
+      'date' => $result[4],
+      'time' => $result[5],
+      'timezone' => $result[6],
+      'method' => $result[7],
+      'url' => $result[8],
+      'protocol' => $result[9],
+      'status' => $result[10],
+      'traffic' => $result[11],
+      'referer' => $result[12],
+      'agent' => $result[13]
+    ];
 
-    if(!in_array($result[12],$urls))
+    $views ++;
+
+    if($log['method'] == 'POST')
     {
-      $uniqueUrls++;
-      array_push($urls, $result[12]);
+      $traffic += $log['traffic'];
     }
 
-    if(!array_key_exists($result[10],$statusCodes))
+    if(!in_array($log['url'], $urls))
     {
-      $statusCodes[$result[10]] = 1;
+      $urls[] = $log['url'];
+      $uniqueUrls++;
+    }
+
+    if(array_key_exists($log['status'], $statusCodes))
+    {
+      $statusCodes[$log['status']] ++;
     }
     else
     {
-      $statusCodes[$result[10]] += 1;
+      $statusCodes[$log['status']] = 1;
     }
     
-    if (preg_match($googlePattern, $result[13]))
+    if (preg_match($googlePattern, $log['agent']))
     {
       $crawlers['Google'] ++;
     }
-    else if (preg_match($bingPattern, $result[13]))
+    else if (preg_match($bingPattern, $log['agent']))
     {
       $crawlers['Bing'] ++;
     }
-    else if (preg_match($baiduPattern, $result[13]))
+    else if (preg_match($baiduPattern, $log['agent']))
     {
       $crawlers['Baidu'] ++;
     }
-    else if (preg_match($yandexPattern, $result[13]))
+    else if (preg_match($yandexPattern, $log['agent']))
     {
       $crawlers['Yandex'] ++;
     }
@@ -68,5 +88,5 @@
     'crawlers' => $crawlers,
     'statusCodes' => $statusCodes
   ];
-  echo json_encode($output)
+    echo json_encode($output,JSON_PRETTY_PRINT);
 ?>
